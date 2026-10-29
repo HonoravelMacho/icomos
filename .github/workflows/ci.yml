@@ -48,7 +48,7 @@ jobs:
         run: |
           cd native/icomos_engine/build-linux
           gcc -std=gnu11 -w -I../include -I../../../third_party/martelos \
-              -O2 test/spike_c.c -L. -licomos_engine -o spike_c
+              -O2 ../test/spike_c.c -L. -licomos_engine -o spike_c
           LD_LIBRARY_PATH=. ./spike_c
 
       - name: flutter test (roundtrip Dart via FFI)
