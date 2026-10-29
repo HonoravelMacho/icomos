@@ -1,0 +1,31 @@
+ICOMOS — Interface de Comunicação e Ocultação com Martelos Open Source
+Copyright (c) 2026 Tiago Rabelo da Silva (HonoravelMacho)
+Licença: MIT — veja LICENSE
+
+Este produto usa software de terceiros, cada um sob sua licença:
+
+1) MARTELOS (motor matemático)
+   - https://github.com/HonoravelMacho/martelos
+   - Copyright (c) Tiago Rabelo da Silva
+   - Licença: Apache License 2.0 — http://www.apache.org/licenses/LICENSE-2.0
+   - Versão usada: submodulo third_party/martelos, commit ea773cd
+     ( SHA completo: ea773cd0e5b78a760d40d5409a7ae4722a4fed1f )
+   - Compilado como código-fonte junto à engine nativa do ICOMOS.
+
+2) GNU Multiple Precision Arithmetic Library (GMP)
+   - https://gmplib.org
+   - Copyright (c) Free Software Foundation, Inc.
+   - Licença: LGPL v3
+   - IMPORTANTE: no Windows o ICOMOS linka o GMP estaticamente dentro da
+     própria biblioteca. Isso ativa a obrigação LGPL de dar ao usuário o
+     caminho de relink; o cumprimento é documentado nas notas da release e em docs/SECURITY.md. No Linux e Android, GMP vem do sistema nativo ou
+     é compilado de código-fonte LGPL identico.
+
+3) Flutter engine / Dart SDK
+   - Licença: BSD-3-Clause (Google).
+
+4) Dependências Dart/Flutter (ver app/pubspec.yaml)
+   - Somente licenças BSD / MIT / Apache-2.0, revisadas artigo 13 do README.
+
+AVISO HONESTO: este software é experimental e NÃO auditado por terceiros.
+Confira limites e não-garantias em docs/THREAT_MODEL.md antes de usar.

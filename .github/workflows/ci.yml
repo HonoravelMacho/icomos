@@ -1,0 +1,65 @@
+# CI do ICOMOS — Fase 0: análise + build nativo + spike C + testes Dart.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Dependências do sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgmp-dev libgtk-3-dev ninja-build cmake pkg-config
+
+      - name: Flutter pub get
+        working-directory: app
+        run: flutter pub get
+
+      - name: dart format --set-exit-if-changed
+        working-directory: app
+        run: dart format --set-exit-if-changed --output=none .
+
+      - name: flutter analyze
+        working-directory: app
+        run: flutter analyze
+
+      - name: Build libicomos_engine.so (GMP do sistema)
+        run: ./native/scripts/build_linux.sh
+
+      - name: Spike C (roundtrip π + validações)
+        run: |
+          cd native/icomos_engine/build-linux
+          gcc -std=gnu11 -w -I../include -I../../../third_party/martelos \
+              -O2 test/spike_c.c -L. -licomos_engine -o spike_c
+          LD_LIBRARY_PATH=. ./spike_c
+
+      - name: flutter test (roundtrip Dart via FFI)
+        working-directory: app
+        env:
+          ICOMOS_ENGINE_LIB: ../native/icomos_engine/build-linux/libicomos_engine.so
+        run: flutter test
+
+      - name: Build Linux desktop (smoke)
+        working-directory: app
+        run: flutter build linux --debug
+
+  # Android Ex: gate de Fase 0 exige `.so` nas 2 plataformas — gradiente
+  # `assembleDebug` validada NDK a partir da Fase 2 (quando o .so entra em jniLibs).

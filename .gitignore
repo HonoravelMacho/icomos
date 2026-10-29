@@ -1,0 +1,45 @@
+# --- Build ---
+build/
+*.o
+*.a
+*.so
+*.dll
+*.dylib
+*.exe
+out/
+native/icomos_engine/build*
+
+# --- GMP vendido (nunca commitar) ---
+third_party/gmp/
+
+# --- Flutter / Dart ---
+.dart_tool/
+.packages
+.flutter-plugins*
+pubspec.lock
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# --- Android ---
+app/android/.gradle/
+app/android/local.properties
+*.jks
+*.keystore
+key.properties
+captures/
+.externalNativeBuild/
+
+# --- Sistema / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+
+# --- Segredos ---
+.env
+*_token*
+gh_token*
+credentials*
