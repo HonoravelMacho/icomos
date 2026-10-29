@@ -38,8 +38,11 @@ Thumbs.db
 *~
 .vscode/
 
-# --- Segredos ---
+# --- Segredos (nomes específicos; NÃO usar *_token* — pegava
+#     arquivos de código legítimos como hud_tokens.dart) ---
 .env
-*_token*
-gh_token*
-credentials*
+gh_token.txt
+github_pat*.txt
+ghp_*.txt
+oauth_token*.txt
+credentials.json
