@@ -1,26 +1,19 @@
-// app.dart — raiz do aplicativo ICOMOS.
-//
-// Fase 0: tela única de status (diagnóstico da engine nativa).
-// Na Fase 1 entra o HUDScaffold + rota (go_router) com o design system.
+// app.dart — raiz do aplicativo ICOMOS (Fase 1: tema HUD + shell HUD).
 import 'package:flutter/material.dart';
 
-import 'core/ffi/engine_client.dart';
-import 'screens/diagnostic_screen.dart';
+import 'core/theme/hud_theme.dart';
+import 'routing/app_router.dart';
 
 class IcomosApp extends StatelessWidget {
   const IcomosApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'ICOMOS',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true, brightness: Brightness.dark),
-      home: const DiagnosticScreen(),
+      theme: hudTheme(),
+      routerConfig: goRouter,
     );
   }
 }
-
-/// Placeholders para uso futuro (referências vivas, sem código morto).
-// ignore: unused_element
-final _ = EngineClient;

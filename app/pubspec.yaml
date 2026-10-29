@@ -35,8 +35,12 @@ dependencies:
   # padrão de fato para dart:ffi. Usado apenas em core/ffi/.
   ffi: ^2.1.4
 
-  # Fontes e ícones da UI (licenças Apache-2.0/OFL — ver NOTICE).
+  # Fontes da UI (Rajdhani: Sofia OFL; JetBrains Mono: OFL) — ver NOTICE.
   cupertino_icons: ^1.0.8
+
+  # Navegação declarativa (shell responsivo, deep-link futuro). BSD-3,
+  # pequena e recomendada pela docs do Flutter.
+  go_router: ^16.0.0
 
 dev_dependencies:
   flutter_test:
@@ -55,9 +59,23 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
 
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
+  # Fontes HUD (título Rajdhani; dados JetBrains Mono) — §11.1 do design.
+  fonts:
+    - family: Rajdhani
+      fonts:
+        - asset: assets/fonts/Rajdhani-Regular.ttf
+        - asset: assets/fonts/Rajdhani-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Rajdhani-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Rajdhani-Bold.ttf
+          weight: 700
+    - family: JetBrains Mono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Variable.ttf
+        - asset: assets/fonts/JetBrainsMono-Bold.ttf
+          weight: 700
+
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
