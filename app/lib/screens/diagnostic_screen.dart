@@ -25,7 +25,9 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> {
   Future<void> _runDiagnostic() async {
     try {
       final client = EngineClient.instance;
-      const msg = 'TESTE ICOMOS 0312';
+      const msg = 'TESTE ICOMOS PI';
+      // Atenção: motor é lossy — dígitos/acentos viram '-' ou somem (alfabeto
+      // de 34 símbolos, alfabeto.c:2). Texto de teste fica dentro do alfabeto.
       final ct = await client.sealText(
         msg,
         houses: const [424242, 777, 8080],
