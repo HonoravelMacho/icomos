@@ -9,8 +9,8 @@ import 'package:icomos/core/ffi/bindings.dart';
 import 'package:icomos/core/ffi/engine_client.dart';
 
 void main() {
-  test('ABI version é 1', () {
-    expect(bindings().abiVersion(), 1);
+  test('ABI version compatível (v1 desde Fase 0; >=1 aceita v2 do Fase 2)', () {
+    expect(bindings().abiVersion(), greaterThanOrEqualTo(1));
   });
 
   test('roundtrip: cifra com π + 3 casas → decifra idêntico', () async {

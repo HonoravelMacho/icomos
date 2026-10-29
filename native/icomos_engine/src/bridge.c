@@ -181,13 +181,4 @@ int icomos_open_file(icomos_engine* eng, const char* in_path,
   return file_stub("open_file");
 }
 
-/* ---------------- Derive (Fase 2 — Argon2id) -------------------------------- */
-int icomos_derive_keys(const uint8_t* secret, size_t secret_len,
-                       const uint8_t* salt, size_t salt_len,
-                       int layers, uint64_t* casas_out, int* constant_out) {
-  (void) secret; (void) secret_len; (void) salt; (void) salt_len;
-  (void) layers; (void) casas_out; (void) constant_out;
-  /* A implementação completa entra na Fase 2 com Argon2id (ref/biblioteca).
-   * PROIBIDO usar calcular_casa_quiasmo() — ver ADR 0001.                  */
-  return IC_ERR_UNSUPPORTED;
-}
+/* NOTE: icomos_derive_keys vive em kdf.c (Fase 2). */

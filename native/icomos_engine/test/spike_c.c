@@ -12,8 +12,8 @@ int main(void) {
   icomos_engine* e = icomos_new();
   if (!e) { fprintf(stderr, "FAIL: icomos_new\n"); return 1; }
 
-  /* 1. ABI version */
-  if (icomos_abi_version() != 1) { fprintf(stderr, "FAIL: abi\n"); fails++; }
+  /* 1. ABI version (v2 = Fase 2: cripto + kdf adicionais) */
+  if (icomos_abi_version() < 1) { fprintf(stderr, "FAIL: abi\n"); fails++; }
 
   /* 2. Roundtrip texto, constante π (idx 1), 3 casas */
   const char* msg = "ATACAR AO AMANHECIDO CMDS OLMEO";

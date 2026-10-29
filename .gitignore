@@ -11,6 +11,7 @@ native/icomos_engine/build*
 
 # --- GMP vendido (nunca commitar) ---
 third_party/gmp/
+third_party/sodium/
 
 # --- Flutter / Dart ---
 .dart_tool/

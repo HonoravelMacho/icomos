@@ -1,4 +1,4 @@
-# CMakeLists.txt — libicomos_engine (GMP estático vendido OU dev do sistema)
+# CMakeLists.txt — libicomos_engine (GMP + libsodium: vendido OU sistema)
 cmake_minimum_required(VERSION 3.16)
 project(icomos_engine LANGUAGES C VERSION 0.0.1)
 
@@ -8,11 +8,28 @@ if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# --- Escolher GMP: vendido (third_party/gmp/<triplet>) ou do sistema --------
 set(MARTELOS "${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/martelos")
-set(VEND_TRIPLET_DEFAULT "linux-x86_64")
-set(VEND_GMP "${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/gmp/${VEND_TRIPLET_DEFAULT}")
+set(VEND_TRIPLET "linux-x86_64")
+set(VEND_GMP "${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/gmp/${VEND_TRIPLET}")
+set(VEND_SOD "${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/sodium/${VEND_TRIPLET}")
 
+# --- libsodium (criptografia de envelope) -----------------------------------
+if (EXISTS "${VEND_SOD}/include/sodium.h")
+  set(SOD_INCLUDE_DIRS "${VEND_SOD}/include")
+  set(SOD_LIBRARIES "${VEND_SOD}/lib/libsodium.a")
+  message(STATUS "libsodium vendido: ${VEND_SOD}")
+else()
+  find_path(SOD_H sodium.h)
+  find_library(SOD_LIB sodium)
+  if (NOT SOD_H OR NOT SOD_LIB)
+    message(FATAL_ERROR "libsodium não encontrado: rode tools/fetch-sodium.sh ou instale libsodium-dev")
+  endif()
+  set(SOD_INCLUDE_DIRS ${SOD_H})
+  set(SOD_LIBRARIES ${SOD_LIB})
+  message(STATUS "libsodium do sistema: ${SOD_LIB}")
+endif()
+
+# --- GMP (motor MARTELOS usa mpf para as constantes) ------------------------
 if (EXISTS "${VEND_GMP}/include/gmp.h")
   set(GMP_INCLUDE_DIRS "${VEND_GMP}/include")
   set(GMP_LIBRARIES "${VEND_GMP}/lib/libgmp.a")
@@ -23,7 +40,6 @@ else()
     pkg_check_modules(GMP QUIET IMPORTED_TARGET gmp)
   endif()
   if (GMP_FOUND)
-    set(GMP_INCLUDE_DIRS ${GMP_INCLUDE_DIRS})
     set(GMP_LIBRARIES PkgConfig::GMP)
     message(STATUS "GMP do sistema (pkg-config)")
   else()
@@ -33,13 +49,12 @@ else()
       message(FATAL_ERROR "GMP não encontrado: rode tools/fetch-gmp.sh ou instale libgmp-dev")
     endif()
     set(GMP_INCLUDE_DIRS ${GMP_H})
-    get_filename_component(GMP_DIR "${GMP_LIB}" DIRECTORY)
     set(GMP_LIBRARIES ${GMP_LIB})
     message(STATUS "GMP do sistema: ${GMP_LIB}")
   endif()
 endif()
 
-# --- Fontes: ponte + motor (Fase 0: texto + ciclo de vida) -------------------
+# --- Fontes: ponte + motor (Fase 2: texto + cripto + kdf) --------------------
 set(MARTELOS_SRC
   ${MARTELOS}/alfabeto.c
   ${MARTELOS}/crypto.c
@@ -49,6 +64,8 @@ set(MARTELOS_SRC
 
 set(ENGINE_SRC
   src/bridge.c
+  src/kdf.c
+  src/crypto.c
 )
 
 add_library(icomos_engine SHARED ${ENGINE_SRC} ${MARTELOS_SRC})
@@ -57,13 +74,11 @@ target_include_directories(icomos_engine PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${MARTELOS}
   ${GMP_INCLUDE_DIRS}
+  ${SOD_INCLUDE_DIRS}
 )
 
-# -lm: parser.c usa sin/cos/mpf math helpers.
-target_link_libraries(icomos_engine PRIVATE m ${GMP_LIBRARIES})
-
-# Sem funções específicas de CLI (printf/exit já não entram nestes fontes;
-# binario.c/main.c/io.c são CLI e ficam FORA da lib — doc em ADR 0001).
+# -lm: parser.c usa sin/cos; sodium é estático (autocontido no .so).
+target_link_libraries(icomos_engine PRIVATE m ${SOD_LIBRARIES} ${GMP_LIBRARIES})
 
 set_target_properties(icomos_engine PROPERTIES
   OUTPUT_NAME "icomos_engine"

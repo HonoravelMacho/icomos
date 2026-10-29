@@ -23,9 +23,23 @@
 extern "C" {
 #endif
 
-/* Código de versão da ABI — aumenta quando mudar a assinatura de qualquer função. */
-#define ICOMOS_ABI_VERSION 1
+/* Código de versão da ABI — aumenta quando a ASSINATURA de qualquer função
+ * mudar. Funções ADICIONADAS não mudam a versão (nova função = novo símbolo). */
+#define ICOMOS_ABI_VERSION 2
 #define IC_OK 0
+
+/* Tamanhos fixos de criptografia (libsodium, docs/PROTOCOL.md §cripto). */
+#define IC_ED25519_PUB  32
+#define IC_ED25519_PRIV 64
+#define IC_ED25519_SIG  64
+#define IC_X25519_PUB   32
+#define IC_X25519_PRIV  32
+#define IC_X25519_SHARED 32
+#define IC_AEAD_NONCE   24
+#define IC_AEAD_KEY     32
+#define IC_AEAD_MAC     16
+#define IC_KDF_SALT     16
+#define IC_KDF_OUT      32
 
 /* Erros (positivos para usarmos -1..-9 sem colidr com códigos do motor). */
 enum {
@@ -47,13 +61,52 @@ int icomos_abi_version(void);
 icomos_engine* icomos_new(void);
 void icomos_free(icomos_engine* eng);
 
-/* ---------------- Derivação de chaves (Fase 2 — agora IC_ERR_UNSUPPORTED)
- * Converte segredo do usuário (Argon2id + HKDF dentro da lib) em N "casas"
- * uint64 no intervalo [1, 2^31) + índice da constante, para uso no motor.
- * `casas_out` é buffer do chamador, com espaço para até `n` valores.       */
+/* ---------------- Derivação de chaves (senhas → motor) ---------------------
+ * Argon2id (m=64 MiB, t=3, p=1, saída 32 B) + HKDF-like (crypto_kdf BLAKE2b)
+ * → N casas uint64 em [1, 2^31) + índice de constante em {1,3,4,5,6,7}
+ * (2 = fórmula custom e NUNCA sai de KDF — é escolha do usuário na UI).
+ * PROIBIDO usar calcular_casa_quiasmo() como KDF (docs/ADR/0001).
+ * `casas_out`: buffer do chamador com espaço para `layers` valores.        */
 int icomos_derive_keys(const uint8_t* secret, size_t secret_len,
                        const uint8_t* salt, size_t salt_len,
                        int layers, uint64_t* casas_out, int* constant_out);
+
+/* --------------- Criptografia de envelope (libsodium 1.0.20) --------------
+ * Tudo EXPERIMENTAL — não auditado (docs/THREAT_MODEL.md).                 */
+/* sodium_init() idempotente; chamar uma vez por processo.                   */
+int icomos_sodium_init(void);
+
+/* aleatório criptográfico do SO — ÚNICO caminho de aleatório (proibido Dart
+ * Random(); ver §6.6 do briefing).                                          */
+int icomos_random(uint8_t* out, size_t n);
+
+/* hash BLAKE2b genérico (generichash) — id público e fingerprints.          */
+int icomos_blake2b(const uint8_t* in, size_t in_len,
+                   uint8_t* out, size_t out_len);
+
+/* Ed25519: geração, assinatura, verificação e conversão p/ X25519.          */
+int icomos_ed25519_keypair(uint8_t pub[32], uint8_t priv[64]);
+int icomos_ed25519_sign(const uint8_t* msg, size_t msg_len,
+                        const uint8_t priv[64], uint8_t sig[64]);
+/* retorna 0 quando válido, -1 quando INVÁLIDO (convenção libsodium).       */
+int icomos_ed25519_verify(const uint8_t* msg, size_t msg_len,
+                          const uint8_t pub[32], const uint8_t sig[64]);
+int icomos_ed25519_pk_to_x25519(const uint8_t ed_pub[32], uint8_t x_pub[32]);
+
+/* X25519: par + acordo de chaves (shared 32 B para HKDF contexto fixo).     */
+int icomos_x25519_keypair(uint8_t pub[32], uint8_t priv[32]);
+int icomos_x25519_scalarmult(const uint8_t my_priv[32],
+                             const uint8_t peer_pub[32],
+                             uint8_t shared[32]);
+
+/* AEAD XChaCha20-Poly1305-IETF: out = ciphertext || mac(16 B).
+ * in/out_len incluem a mac no open (in) e no seal (out).                    */
+int icomos_aead_seal(const uint8_t* in, size_t in_len,
+                     const uint8_t nonce[24], const uint8_t key[32],
+                     uint8_t* out, size_t* out_len);
+int icomos_aead_open(const uint8_t* in, size_t in_len,
+                     const uint8_t nonce[24], const uint8_t key[32],
+                     uint8_t* out, size_t* out_len);
 
 /* ---------------- Texto (memória) — CIFRAR/DECIFRAR em 1..8 camadas -------
  * `in_len` é em BYTES e `in` NÃO precisa ser NUL-terminado (a ponte copia).
